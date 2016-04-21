@@ -10,6 +10,8 @@ Authors: Joel Burton, Christian Fernandez, Meggie Mahnken.
 from flask import Flask, render_template, redirect, flash, session
 import jinja2
 
+from flask_debugtoolbar import DebugToolbarExtension
+
 import melons
 
 
@@ -70,19 +72,32 @@ def shopping_cart():
     #   - keep track of the total amt ordered for a melon-type
     #   - keep track of the total amt of the entire order
     # - hand to the template the total order cost and the list of melon types
-    cart_dict = {}
-    if session:   
-        # gets quantity for each melon id
+    shoppe_cart = {}
+    order_total = 0
+    # # adding object as key with quantity as value into a dict called cart_dict,
+    # # which didn't work
+    # if session:   
+    #     # gets quantity for each melon id
+    #     for item in session['cart']:
+    #         cart_dict[melons.get_by_id(item)] = cart_dict.get(melons.get_by_id(item), 0) + 1
+    # else:
+    #     print "empty yo"
+    # print "akldfj;aksdjf", cart_dict
+
+    if session:
         for item in session['cart']:
-            cart_dict[melons.get_by_id(item)] = cart_dict.get(item, 0) + 1
+            melon = melons.get_by_id(item)
+            if melon.common_name not in shoppe_cart:
+                shoppe_cart[melon.common_name] = {'price': melon.price, 'qty': 1}
+            else:
+                shoppe_cart[melon.common_name]['qty'] += 1
+
+    for item in shoppe_cart:
+        total = item['price'] * item['qty']
+        order_total += total
 
 
-    else:
-
-        print "empty yo"
-        
-    print "akldfj;aksdjf", cart_dict
-    # return render_template("cart.html", shop_cart=cart_dict)
+    return render_template("cart.html", shop_cart=shoppe_cart, total=order_total)
 
 
 @app.route("/add_to_cart/<int:melon_id>")
@@ -107,7 +122,7 @@ def add_to_cart(melon_id):
         # add the melon to cart
         session['cart'].append(melon_id)
     flash("Successfully added to the cart.")
-    return render_template('cart.html')
+    return redirect("/cart")
 
 
 @app.route("/login", methods=["GET"])
@@ -142,4 +157,6 @@ def checkout():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.debug = True
+    DebugToolbarExtension(app)
+    app.run()
