@@ -84,19 +84,24 @@ def shopping_cart():
     #     print "empty yo"
     # print "akldfj;aksdjf", cart_dict
 
-    if session:
-        for item in session['cart']:
-            melon = melons.get_by_id(item)
+    if 'cart' in session:
+        for melon_id in session['cart']:
+            melon = melons.get_by_id(melon_id)
             if melon.common_name not in shoppe_cart:
-                shoppe_cart[melon.common_name] = {'price': melon.price, 'qty': 1}
+                shoppe_cart[melon.common_name] = {'price': melon.price, 'qty': 1, 'melon_id': melon_id}
             else:
                 shoppe_cart[melon.common_name]['qty'] += 1
 
-    for item in shoppe_cart:
-        total = item['price'] * item['qty']
-        order_total += total
+    for melon_name in shoppe_cart:
+        melon_total = shoppe_cart[melon_name]['price'] * shoppe_cart[melon_name]['qty']
+        shoppe_cart[melon_name]['string_total'] = "$%.2f" %(melon_total)
+        shoppe_cart[melon_name]['string_price'] = "$%.2f" %(shoppe_cart[melon_name]['price'])
+        order_total += melon_total
 
-
+    # print "\n\nshoppe cart\n\n", shoppe_cart
+    
+    order_total = "$%.2f" %(order_total)
+    # print "\n\norder total\n\n", order_total
     return render_template("cart.html", shop_cart=shoppe_cart, total=order_total)
 
 
